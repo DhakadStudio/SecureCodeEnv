@@ -1,7 +1,7 @@
 """
 SecureCodeEnv - FastAPI Application Entry Point
 Built for Meta x PyTorch OpenEnv Hackathon 2026
-Author: Vishal Dhakad (vishaldhakad)
+
 """
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
