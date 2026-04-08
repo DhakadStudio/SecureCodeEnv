@@ -1,0 +1,141 @@
+name: SecureCodeEnv
+version: "2.0.0"
+description: >
+  An RL environment for training LLM agents to write production-ready,
+  secure Python code. Agents are graded on correctness, security attack
+  resistance (dynamic adversarial payloads), CWE-based static analysis,
+  performance, and codebase consistency via a novel CodeGraph memory system.
+  No other public OpenEnv environment combines attack simulation + codebase
+  consistency grading. All grading is 100% automated and deterministic.
+
+author: Vishal Dhakad
+hf_space: vishaldhakad/SecureCodeEnv
+license: MIT
+
+action_space:
+  type: text
+  description: Python source code string submitted by the agent
+  fields:
+    - name: code
+      type: string
+      description: The complete Python function(s) to be graded
+    - name: filename
+      type: string
+      description: Logical filename for CodeGraph tracking (e.g. src/auth/validator.py)
+    - name: session_id
+      type: string
+      description: Session ID returned from /reset
+
+observation_space:
+  type: structured
+  fields:
+    - name: total_reward
+      type: float
+      range: [0.0, 1.0]
+      description: Weighted final score across all 7 dimensions
+    - name: scores
+      type: dict
+      description: >
+        Per-dimension scores: correctness, attack_resist, static_security,
+        consistency, performance, documentation, code_structure
+    - name: feedback
+      type: dict
+      description: Human-readable feedback string per grading dimension
+    - name: codegraph
+      type: dict
+      description: >
+        Full codebase context including components, detected conventions,
+        dependency list, and natural-language context prompt for the agent
+    - name: done
+      type: bool
+      description: True if episode is complete (reward >= 0.90 or max steps reached)
+    - name: step_count
+      type: int
+      description: Current step number within the episode
+
+reward:
+  type: multi_dimensional
+  range: [0.0, 1.0]
+  dimensions:
+    - name: correctness
+      weight: 0.30
+      description: Fraction of test cases passed (including edge cases)
+    - name: attack_resistance
+      weight: 0.20
+      description: Fraction of randomized adversarial payloads blocked
+    - name: static_security
+      weight: 0.15
+      description: bandit + AST security linter score (CWE-mapped)
+    - name: codegraph_consistency
+      weight: 0.15
+      description: Adherence to conventions from existing codebase components
+    - name: performance
+      weight: 0.10
+      description: Relative efficiency vs naive/optimal baselines (timeit)
+    - name: documentation
+      weight: 0.05
+      description: Docstring + type hint coverage across all functions
+    - name: code_structure
+      weight: 0.05
+      description: Clean code checks (no bare print, no bare except, etc.)
+
+tasks:
+  - id: easy_password_validator
+    difficulty: easy
+    cwe: [CWE-916, CWE-521]
+    description: Validate password strength and hash with bcrypt (not MD5)
+
+  - id: easy_input_sanitizer
+    difficulty: easy
+    cwe: [CWE-20, CWE-116]
+    description: Sanitize HTML (XSS prevention) and filenames
+
+  - id: easy_token_generator
+    difficulty: easy
+    cwe: [CWE-338, CWE-330]
+    description: Generate cryptographically secure tokens using secrets module
+
+  - id: medium_sql_query_builder
+    difficulty: medium
+    cwe: [CWE-89, CWE-20]
+    description: Build parameterized SQL queries — never string-format user input
+
+  - id: medium_file_path_handler
+    difficulty: medium
+    cwe: [CWE-22, CWE-20]
+    description: Resolve file paths safely — block path traversal attacks
+
+  - id: medium_rate_limiter
+    difficulty: medium
+    cwe: [CWE-770, CWE-400]
+    description: Thread-safe sliding window rate limiter
+
+  - id: hard_file_upload_handler
+    difficulty: hard
+    cwe: [CWE-22, CWE-434]
+    description: Validate uploads — block traversal filenames, executable extensions, MIME spoofing
+
+  - id: hard_jwt_validator
+    difficulty: hard
+    cwe: [CWE-347, CWE-613]
+    description: Validate JWTs — enforce HS256, block none-alg attack, check expiry
+
+  - id: hard_auth_middleware
+    difficulty: hard
+    cwe: [CWE-287, CWE-352]
+    description: CSRF protection and Bearer auth using hmac.compare_digest (timing-safe)
+
+runtime:
+  max_steps_per_episode: 5
+  done_reward_threshold: 0.90
+  max_inference_time_minutes: 20
+  min_vcpu: 2
+  min_memory_gb: 8
+  port: 7860
+
+endpoints:
+  health: GET /health
+  reset: POST /reset
+  step: POST /step
+  state: GET /state
+  docs: GET /docs

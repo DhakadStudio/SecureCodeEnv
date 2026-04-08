@@ -2,10 +2,10 @@
 title: SecureCodeEnv
 emoji: 🔒
 colorFrom: red
-colorTo: blue
+colorTo: orange
 sdk: docker
 pinned: true
-license: apache-2.0
+license: mit
 ---
 
 # SecureCodeEnv
