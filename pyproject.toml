@@ -2,11 +2,7 @@
 name = "SecureCodeEnv"
 version = "0.1.0"
 description = "Hackathon project"
-authors = [
-    { name="Radhika Gupta", email="radhikaa1710@gmail.com" }
-    {name= "vishal Dhakad", email = "vishaldhakad6425@gmail.com"}
-    {name = "Mahima sahu", email = "mahima04sahu@gmail.com"}
-]
+
 dependencies = [
     "fastapi",
     "uvicorn",
